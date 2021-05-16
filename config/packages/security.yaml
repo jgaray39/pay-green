@@ -1,0 +1,32 @@
+security:
+    encoders:
+        App\Entity\UserApi:
+            algorithm: auto
+    providers:
+        user_provider:
+            entity:
+                class: App\Entity\UserApi
+                property: username
+    firewalls:
+        login:
+            pattern:  ^/api/login
+            stateless: true #pas de session crée sur le serveur, car l’on utilise JWT
+            anonymous: true 
+            user_checker: App\Security\UserApiLoginChecker #permets de faire des verifications sur le user voulant se connecter
+            json_login:
+                check_path: /api/login
+                # Obligatoire pour l'utilisation de Lexit
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        api:
+            pattern: ^/api
+            stateless: true
+            anonymous: ~
+            guard:
+                authenticators:
+                    - lexik_jwt_authentication.jwt_token_authenticator
+
+    access_control:
+        - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/transaction, roles: [ROLE_API_ADMIN, ROLE_API_USER] }
+        - { path: ^/api/user, roles: ROLE_API_ADMIN }
